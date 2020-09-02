@@ -226,10 +226,7 @@ GreeHeaterCooler.prototype = {
         callback();
     },
     getLight: function (callback) {
-        callback(null,
-            this.device.getLigthState() === commands.light.value.off
-                ? this.GreeLightService.getCharacteristic(Characteristic.On).updateValue(0)
-                : this.GreeLightService.getCharacteristic(Characteristic.On).updateValue(1));
+        callback(null, this.device.getLigthState());
     },
 
     getCurrentHeaterCoolerState: function (callback) {
