@@ -46,6 +46,14 @@ module.exports = {
             high: 5
         }
     },
+    // turns all indicators and the display on the unit on or off
+    light: {
+        code: 'Lig',
+        value: {
+            off: 0,
+            on: 1
+        }
+    },
     // controls the swing mode of the vertical air blades
     swingVert: {
         code: 'SwUpDn',
