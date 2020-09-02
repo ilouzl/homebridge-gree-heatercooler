@@ -279,6 +279,18 @@ class Device {
         return this.device.props[cmd.power.code] || 0;
     };
 
+    setLightState(value) {
+        var that = this;
+        that._sendCommand(
+            [cmd.light.code],
+            [value ? 1 : 0]
+        );
+    };
+
+    getLightState() {
+        return this.device.props[cmd.light.code] || 0;
+    };
+
     /**
      * Set temperature
      * @param {number} value Temperature
