@@ -98,6 +98,14 @@ function GreeHeaterCooler(log, config) {
 
     this.services.push(this.serviceInfo);
 
+    this.GreeLightService = new Service.Lightbulb();
+    this.GreeLightService
+        .getCharacteristic(Characteristic.On)
+        .on('get', this.getLight.bind(this))
+        .on('set', this.setLight.bind(this));
+
+    this.services.push(this.GreeLightService);
+
     this.discover();
 }
 
@@ -163,6 +171,12 @@ GreeHeaterCooler.prototype = {
                         .updateValue(val);
                 });
 
+                me.getLight((x, val) => {
+                    me.GreeLightService
+                        .getCharacteristic(Characteristic.On)
+                        .updateValue(val);
+                });
+
             },
             onUpdate: (deviceModel) => {
                 // log.info('Status updated on %s', deviceModel.name)
@@ -201,6 +215,23 @@ GreeHeaterCooler.prototype = {
                 ? Characteristic.Active.INACTIVE
                 : Characteristic.Active.ACTIVE);
     },
+
+    setLight: function (Light, callback, context) {
+        if (this._isContextValid(context)) {
+            this.device.setLigthState(Light == 1 ? 
+                                            commands.light.value.on : commands.light.value.off);
+            // this.device.setLigthState(Light === this.GreeLightService.getCharacteristic(Characteristic.On).value ? 
+            //                                 commands.light.value.on : commands.light.value.off);
+        }
+        callback();
+    },
+    getLight: function (callback) {
+        callback(null,
+            this.device.getLigthState() === commands.light.value.off
+                ? this.GreeLightService.getCharacteristic(Characteristic.On).updateValue(0)
+                : this.GreeLightService.getCharacteristic(Characteristic.On).updateValue(1));
+    },
+
     getCurrentHeaterCoolerState: function (callback) {
         let mode = this.device.getMode(),
             state;
