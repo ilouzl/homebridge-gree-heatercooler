@@ -218,15 +218,15 @@ GreeHeaterCooler.prototype = {
 
     setLight: function (Light, callback, context) {
         if (this._isContextValid(context)) {
-            this.device.setLigthState(Light == 1 ? 
+            this.device.setLightState(Light == 1 ? 
                                             commands.light.value.on : commands.light.value.off);
-            // this.device.setLigthState(Light === this.GreeLightService.getCharacteristic(Characteristic.On).value ? 
+            // this.device.setLightState(Light === this.GreeLightService.getCharacteristic(Characteristic.On).value ? 
             //                                 commands.light.value.on : commands.light.value.off);
         }
         callback();
     },
     getLight: function (callback) {
-        callback(null, this.device.getLigthState());
+        callback(null, this.device.getLightState());
     },
 
     getCurrentHeaterCoolerState: function (callback) {
