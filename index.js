@@ -106,6 +106,32 @@ function GreeHeaterCooler(log, config) {
 
     this.services.push(this.GreeLightService);
 
+    this.GreeSlatService = new Service.Slat();
+    this.GreeSlatService
+        .getCharacteristic(Characteristic.SlatType, Characteristic.SlatType.VERTICAL);
+
+    this.GreeSlatService
+        .getCharacteristic(Characteristic.Name, "vertical slat");
+    
+    this.GreeSlatService
+        .getCharacteristic(Characteristic.CurrentTiltAngle, -55);
+    
+    this.GreeSlatService
+        .getCharacteristic(Characteristic.CurrentSlatState)
+        .on('get', this.getSwingMode.bind(this))
+    
+    this.GreeSlatService
+        .getCharacteristic(Characteristic.SwingMode)
+        .on('get', this.getSlatState.bind(this))
+        .on('set', this.setSwingMode.bind(this));
+
+    this.GreeSlatService
+        .getCharacteristic(Characteristic.TargetTiltAngle)
+        .on('get', this.getTiltAngle.bind(this))
+        .on('set', this.setTiltAngle.bind(this));
+
+    this.services.push(this.GreeSlatService);
+
     this.discover();
 }
 
@@ -163,6 +189,9 @@ GreeHeaterCooler.prototype = {
                     me.GreeACService
                         .getCharacteristic(Characteristic.SwingMode)
                         .updateValue(val);
+                    me.GreeSlatService
+                        .getCharacteristic(Characteristic.SwingMode)
+                        .updateValue(val);
                 });
 
                 me.getRotationSpeed((x, val) => {
@@ -174,6 +203,12 @@ GreeHeaterCooler.prototype = {
                 me.getLight((x, val) => {
                     me.GreeLightService
                         .getCharacteristic(Characteristic.On)
+                        .updateValue(val);
+                });
+
+                me.getSlatState((x, val) => {
+                    me.GreeSlatService
+                        .getCharacteristic(Characteristic.CurrentSlatState)
                         .updateValue(val);
                 });
 
@@ -219,9 +254,7 @@ GreeHeaterCooler.prototype = {
     setLight: function (Light, callback, context) {
         if (this._isContextValid(context)) {
             this.device.setLightState(Light == 1 ? 
-                                            commands.light.value.on : commands.light.value.off);
-            // this.device.setLightState(Light === this.GreeLightService.getCharacteristic(Characteristic.On).value ? 
-            //                                 commands.light.value.on : commands.light.value.off);
+                    commands.light.value.on : commands.light.value.off);
         }
         callback();
     },
@@ -324,6 +357,75 @@ GreeHeaterCooler.prototype = {
                 : commands.swingVert.value.full);
         }
         callback();
+    },
+
+    getTiltAngle: function (callback) {
+        let value = this.device.getSwingVert();
+        console.log("get tilt " + value);
+        let angle;
+        if (value == commands.swingVert.default)
+            angle = 0;
+        else if (value == commands.swingVert.full)
+            angle = -45;
+        else if (value == commands.swingVert.fixedTop)
+            angle = 0;
+        else if (value == commands.swingVert.fixedMidTop)
+            angle = -20;
+        else if (value == commands.swingVert.fixedMid)
+            angle = -40;
+        else if (value == commands.swingVert.fixedMidBottom)
+            angle = -60;
+        else if (value == commands.swingVert.fixedBottom)
+            angle = -80;
+        else if (value == commands.swingVert.swingBottom)
+            angle = -70;
+        else if (value == commands.swingVert.swingMidBottom)
+            angle = -50;
+        else if (value == commands.swingVert.swingMid)
+            angle = -30;
+        else if (value == commands.swingVert.swingMidTop)
+            angle = -10;
+        else if (value == commands.swingVert.swingTop)
+            angle = 10;
+        else
+            angle = 5;
+
+        callback(null, angle);
+    },
+    setTiltAngle: function (Angle, callback, context) {
+        if (this._isContextValid(context)) {
+            let value;
+            console.log("set tilt - " + Angle);
+            if (Angle > 0)
+            {
+                value = commands.swingVert.value.full;
+            }
+            else if(Angle > -20)
+            {
+                value = commands.swingVert.value.swingTop;
+            }
+            else if(Angle > -40)
+            {
+                tvalue = commands.swingVert.value.swingMidTop;
+            }
+            else if(Angle > -60)
+            {
+                value = commands.swingVert.value.swingMidBottom;
+            }
+            else if(Angle > -80)
+            {
+                value = commands.swingVert.value.swingBottom;
+            }
+            this.device.setSwingVert(value);
+        }
+        callback();
+    },
+
+    getSlatState: function (callback) {
+        callback(null,
+            commands.swingVert.fixedValues.includes(this.device.getSwingVert())
+                ? Characteristic.CurrentSlatState.FIXED
+                : Characteristic.CurrentSlatState.SWINGING);
     },
 
     getRotationSpeed: function (callback) {
